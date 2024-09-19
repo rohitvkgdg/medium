@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -12,10 +13,10 @@ model User {
   email    String   @unique
   name     String?
   password String
-  posts    Post[]
+  blog     Blog[]
 }
 
-model Post {
+model Blog {
   id        String   @id @default(uuid())
   title     String
   content   String

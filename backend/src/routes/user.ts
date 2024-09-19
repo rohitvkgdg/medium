@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { sign } from "hono/jwt";
 
@@ -17,7 +17,6 @@ userRouter.post('/signup',async (c) => {
 		datasourceUrl : c.env.DATABASE_URL,
 	}).$extends(withAccelerate());
 	try{
-		
 		const user = await prisma.user.create({
 			data:{
 				name,
@@ -33,7 +32,7 @@ userRouter.post('/signup',async (c) => {
 	}
 });
 
-userRouter.post('/login', async (c) => {
+userRouter.post('/signin', async (c) => {
 	const { email, password } = await c.req.json();
 	const prisma = new PrismaClient({
 		datasourceUrl: c.env?.DATABASE_URL,
@@ -50,5 +49,5 @@ userRouter.post('/login', async (c) => {
 		return c.json({message: 'Invalid email or password'}, 401)
 	}
 	const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
-	return c.json({message: 'Login successful'}, 200)
+	return c.json({jwt}, 200)
 });
