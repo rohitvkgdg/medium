@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { sign } from "hono/jwt";
+import { signinInput, signupInput } from "@rohitvkgdg/medium-common";
 
 export const userRouter = new Hono<{
     Bindings: {
@@ -13,6 +14,10 @@ export const userRouter = new Hono<{
 userRouter.post('/signup',async (c) => {
 
 	const { name, email, password } = await c.req.json();
+	const { success } = signupInput.safeParse({name, email, password})
+	if(!success){
+		return c.json({message: "Invalid inputs"}, 400)
+	}
 	const prisma = new PrismaClient({
 		datasourceUrl : c.env.DATABASE_URL,
 	}).$extends(withAccelerate());
@@ -26,7 +31,7 @@ userRouter.post('/signup',async (c) => {
 		});
 		const jwt = await sign({id: user.id}, c.env.JWT_SECRET);
 		
-		return c.json({jwt}, 200)
+		return c.text(jwt, 200)
 	} catch(e){
 		return c.json({message: 'User already exists'}, 400)
 	}
@@ -34,6 +39,10 @@ userRouter.post('/signup',async (c) => {
 
 userRouter.post('/signin', async (c) => {
 	const { email, password } = await c.req.json();
+	const { success } = signinInput.safeParse({email, password})
+	if(!success){
+		return c.json({message: "Invalid inputs"}, 400)
+	}
 	const prisma = new PrismaClient({
 		datasourceUrl: c.env?.DATABASE_URL,
 	}).$extends(withAccelerate());
@@ -49,5 +58,5 @@ userRouter.post('/signin', async (c) => {
 		return c.json({message: 'Invalid email or password'}, 401)
 	}
 	const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
-	return c.json({jwt}, 200)
+	return c.text(jwt, 200)
 });
